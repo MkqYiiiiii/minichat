@@ -1,0 +1,4806 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>چت آنلاین</title>
+
+<meta name="description"
+      content="چت آنلاین برای ارسال پیام، عکس، فیلم، فایل و پیام صوتی">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="chat-background"></div>
+
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<section
+    class="login-screen"
+    id="loginScreen"
+>
+
+    <div class="login-box">
+
+        <div class="logo">
+            💬
+        </div>
+
+        <h1>
+            سیک کن داخل
+        </h1>
+
+        <div class="login-description">
+
+            اسم مسخره ات رو بزن و وارد گفت و گو شو
+
+            <br>
+
+            عشق باشه... صفا باشه... 701 باشه!
+
+        </div>
+
+        <input
+            id="nameInput"
+            class="name-input"
+            type="text"
+            maxlength="30"
+            autocomplete="nickname"
+            placeholder="اسمتو بنویس..."
+        >
+
+        <button
+            id="enterButton"
+            class="enter-button"
+        >
+            ورود به چت
+        </button>
+
+        <div
+            id="connectionStatus"
+            class="connection-status"
+        >
+            در انتظار اتصال...
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     APP
+===================================================== -->
+
+<main
+    class="chat-app"
+    id="chatApp"
+>
+
+<header class="chat-header">
+
+    <div class="header-content">
+
+        <div
+            class="room-name"
+            id="roomName"
+        >
+            اتاق گفت‌وگوی عمومی
+        </div>
+
+        <div class="online-count">
+
+            <span class="online-dot"></span>
+
+            <span id="onlineCount">
+                0 نفر آنلاین
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="header-menu">
+
+        <button
+            id="userButton"
+            title="تغییر نام و وضعیت"
+        >
+            👤
+        </button>
+
+    </div>
+
+</header>
+
+
+<section
+    class="messages"
+    id="messages"
+></section>
+
+
+<div
+    class="file-preview-panel"
+    id="filePreviewPanel"
+>
+
+    <div class="file-preview-content">
+
+        <img
+            id="previewThumbnail"
+            class="preview-thumbnail"
+            src=""
+            alt=""
+        >
+
+        <div class="preview-info">
+
+            <div
+                id="previewName"
+                class="preview-name"
+            ></div>
+
+            <div
+                id="previewType"
+                class="preview-type"
+            ></div>
+
+        </div>
+
+        <button
+            class="cancel-file"
+            id="cancelFile"
+        >
+            ✕
+        </button>
+
+    </div>
+
+</div>
+
+
+<footer class="composer-area">
+
+    <div
+        class="reply-bar"
+        id="replyBar"
+    >
+
+        <div class="reply-bar-info">
+
+            <div
+                class="reply-bar-title"
+                id="replyBarTitle"
+            >
+                ریپلای
+            </div>
+
+            <div
+                class="reply-bar-text"
+                id="replyBarText"
+            >
+                پیام
+            </div>
+
+        </div>
+
+        <button
+            class="cancel-reply"
+            id="cancelReply"
+        >
+            ✕
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         # پنل ایموجی‌های خاص (اختصاصی، خارج از کیبورد)
+         این پنل با کلیک روی دکمه ✨ باز می‌شود و از روی
+         آرایه SPECIAL_EMOJI_PACKS در جاوااسکریپت ساخته می‌شود.
+         با کلیک روی هر ایموجی، یک کد مخصوص مثل {{emoji:bard}}
+         داخل متن پیام درج می‌شود و موقع نمایش پیام، به تصویر
+         تبدیل می‌گردد (تابع renderMessageTextContent).
+    ===================================================== -->
+
+    <div
+        class="special-emoji-panel"
+        id="specialEmojiPanel"
+        style="display:none;"
+    >
+
+        <div
+            class="emoji-panel-tabs"
+            id="emojiPanelTabs"
+        ></div>
+
+        <div
+            class="emoji-panel-grid"
+            id="emojiPanelGrid"
+        ></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         # پنل انتخاب فریم/قاب پیام
+         کاربر یکی از قاب‌ها (نئونی آبی، نئونی صورتی، طلایی، ساده)
+         را انتخاب می‌کند. مقدار انتخاب‌شده در متغیر selectedFrame
+         ذخیره می‌شود و هنگام ارسال پیام، همراه پیام به سرور
+         فرستاده می‌شود تا بعداً به‌صورت کلاس CSS روی پیام اعمال شود.
+
+         ⚠️ نکته مهم: چون بک‌اند (Cloudflare Worker) توسط ما ساخته
+         نشده، اگر ستون frame در دیتابیس وجود نداشته باشد، ممکن است
+         سرور این فیلد را نادیده بگیرد و فقط برای خود فرستنده
+         (به‌صورت آنی/optimistic) نمایش داده شود، نه برای بقیه بعد
+         از رفرش صفحه. برای پایدار شدن کامل باید بک‌اند هم ستون
+         frame و sender_status را پشتیبانی کند.
+    ===================================================== -->
+
+    <div
+        class="frame-panel"
+        id="framePanel"
+        style="display:none;"
+    >
+
+        <div class="frame-panel-title">
+            انتخاب قاب پیام
+        </div>
+
+        <div
+            class="frame-options"
+            id="frameOptions"
+        ></div>
+
+    </div>
+
+
+    <div class="composer">
+
+        <button
+            class="tool-button"
+            id="fileButton"
+            title="ارسال فایل"
+        >
+            📎
+        </button>
+
+        <input
+            type="file"
+            id="fileInput"
+        >
+
+        <button
+            class="tool-button"
+            id="recordButton"
+            title="ضبط پیام صوتی"
+        >
+            🎙️
+        </button>
+
+        <!-- # دکمه باز کردن پنل ایموجی‌های خاص -->
+        <button
+            class="tool-button"
+            id="specialEmojiButton"
+            title="ایموجی های خاص"
+        >
+            ✨
+        </button>
+
+        <!-- # دکمه باز کردن پنل انتخاب قاب پیام -->
+        <button
+            class="tool-button"
+            id="frameButton"
+            title="قاب پیام"
+        >
+            🖼️
+        </button>
+
+        <div class="text-wrapper">
+
+            <textarea
+                id="messageInput"
+                class="message-input"
+                rows="1"
+                maxlength="5000"
+                placeholder="پیام خود را بنویسید..."
+            ></textarea>
+
+        </div>
+
+        <button
+            class="send-button"
+            id="sendButton"
+            title="ارسال"
+        >
+            ➤
+        </button>
+
+    </div>
+
+</footer>
+
+</main>
+
+
+<!-- =====================================================
+     VIEWER
+===================================================== -->
+
+<div
+    class="media-viewer"
+    id="mediaViewer"
+>
+
+    <button
+        class="close-viewer"
+        id="closeViewer"
+    >
+        ✕
+    </button>
+
+    <div
+        class="viewer-content"
+        id="viewerContent"
+    ></div>
+
+</div>
+
+
+<!-- =====================================================
+     ROOM MODAL
+===================================================== -->
+
+<div
+    class="room-modal"
+    id="roomModal"
+>
+
+    <div class="room-box">
+
+        <h2>
+            تغییر نام اتاق
+        </h2>
+
+        <input
+            id="roomNameInput"
+            type="text"
+            maxlength="50"
+            placeholder="نام جدید اتاق"
+        >
+
+        <div class="room-actions">
+
+            <button id="closeRoomModal">
+                لغو
+            </button>
+
+            <button
+                id="saveRoomName"
+                class="save-room"
+            >
+                ذخیره
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     USER MODAL
+===================================================== -->
+
+<div
+    class="user-modal"
+    id="userModal"
+>
+
+    <div class="user-box">
+
+        <h2>
+            تغییر نام
+        </h2>
+
+        <input
+            id="userNameInput"
+            type="text"
+            maxlength="30"
+            placeholder="نام جدید"
+        >
+
+        <!-- =====================================================
+             # بخش وضعیت (ایده گرفته‌شده از دیسکورد)
+             کاربر فقط می‌تواند از بین چند ایموجی استاندارد کیبورد
+             (نه ایموجی‌های خاص/آیکون8) یکی را به‌عنوان وضعیت کنار
+             اسمش انتخاب کند. دلیل محدود کردن به ایموجی استاندارد
+             این است که اگر ایموجی‌های خاص (مثل تیک آبی) هم مجاز
+             باشند، ممکن است کاربران فکر کنند آن شخص ادمین است.
+        ===================================================== -->
+
+        <div class="status-picker-title">
+            وضعیت (ایموجی کنار اسم)
+        </div>
+
+        <div
+            class="status-picker"
+            id="statusPicker"
+        ></div>
+
+        <div class="user-actions">
+
+            <button id="closeUserModal">
+                لغو
+            </button>
+
+            <button
+                id="saveUserName"
+                class="save-user"
+            >
+                ذخیره
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   SERVER
+===================================================== */
+
+const SERVER_URL =
+    "https://chat-701.arashbashavard824.workers.dev";
+
+
+/* =====================================================
+   CONFIG
+===================================================== */
+
+const POLL_INTERVAL = 4000;
+
+const ONLINE_INTERVAL = 60000;
+
+
+/*
+   محدودیت فایل مطابق Worker.
+
+   این محدودیت در HTML فقط برای جلوگیری
+   از ارسال فایل غیرقابل ذخیره است.
+
+   Worker همچنان محدودیت اصلی را بررسی می‌کند.
+*/
+
+const MAX_FILE_BYTES =
+    1400000;
+
+
+/* =====================================================
+   # داده‌های ایموجی‌های خاص (Special Emoji Packs)
+   هر پک شامل یک نام انگلیسی (name)، یک برچسب فارسی برای
+   نمایش در تب‌ها (label) و لیستی از آیکون‌هاست.
+   دسته‌ی خالی «Microsoft» طبق درخواست شما اضافه نشده است.
+===================================================== */
+
+const SPECIAL_EMOJI_PACKS = [
+
+    {
+        name: "AI",
+        label: "هوش مصنوعی",
+        icons: [
+            { id: "bard", url: "https://img.icons8.com/glassmorphism/48/bard.png" },
+            { id: "gemini-ai", url: "https://img.icons8.com/glassmorphism/48/gemini-ai.png" },
+            { id: "sparkles", url: "https://img.icons8.com/glassmorphism/48/sparkles.png" }
+        ]
+    },
+
+    {
+        name: "Apps",
+        label: "اپلیکیشن‌ها",
+        icons: [
+            { id: "apple-music", url: "https://img.icons8.com/glassmorphism/48/apple-music.png" },
+            { id: "dropbox", url: "https://img.icons8.com/glassmorphism/48/dropbox.png" },
+            { id: "gmail", url: "https://img.icons8.com/glassmorphism/48/gmail.png" },
+            { id: "appointment-reminders", url: "https://img.icons8.com/glassmorphism/48/appointment-reminders.png" },
+            { id: "google-logo", url: "https://img.icons8.com/glassmorphism/48/google-logo.png" },
+            { id: "twitterx", url: "https://img.icons8.com/glassmorphism/48/twitterx.png" },
+            { id: "spotify", url: "https://img.icons8.com/glassmorphism/48/spotify.png" },
+            { id: "recycle-sign", url: "https://img.icons8.com/glassmorphism/48/recycle-sign.png" }
+        ]
+    },
+
+    {
+        name: "Music",
+        label: "موسیقی",
+        icons: [
+            { id: "rock-music", url: "https://img.icons8.com/glassmorphism/48/rock-music.png" },
+            { id: "international-music", url: "https://img.icons8.com/glassmorphism/48/international-music.png" },
+            { id: "music-library", url: "https://img.icons8.com/glassmorphism/48/music-library.png" },
+            { id: "no-microphone", url: "https://img.icons8.com/glassmorphism/48/no-microphone.png" }
+        ]
+    }
+
+];
+
+
+/* # نگاشت سریع id -> آیکون، برای پیدا کردن سریع هر ایموجی هنگام نمایش پیام */
+
+const SPECIAL_EMOJI_MAP = {};
+
+SPECIAL_EMOJI_PACKS.forEach(function(pack){
+
+    pack.icons.forEach(function(icon){
+
+        SPECIAL_EMOJI_MAP[icon.id] = icon;
+
+    });
+
+});
+
+
+/* =====================================================
+   # داده‌های فریم/قاب پیام
+   هر گزینه یک id دارد که هم به‌عنوان کلاس CSS (frame-<id>)
+   و هم به‌عنوان مقدار ارسالی به سرور استفاده می‌شود.
+===================================================== */
+
+const FRAME_OPTIONS = [
+    { id: "none", label: "بدون قاب", emoji: "▫️" },
+    { id: "neon-blue", label: "نئونی آبی", emoji: "🔷" },
+    { id: "neon-pink", label: "نئونی صورتی", emoji: "🌸" },
+    { id: "gold", label: "طلایی", emoji: "🟡" },
+    { id: "simple", label: "ساده", emoji: "⬜" }
+];
+
+
+/* =====================================================
+   # لیست ایموجی‌های استاندارد برای «وضعیت» کنار اسم
+   طبق درخواست شما، فقط ایموجی‌های معمولیِ کیبورد مجازند
+   (نه ایموجی‌های خاص بالا) تا کسی گمان نکند فرد ادمین است.
+===================================================== */
+
+const STATUS_EMOJIS = [
+    "😀","😎","🥳","😴","🤒",
+    "😢","😡","❤️","🔥","🎮",
+    "📚","💻","☕","🌙","👀"
+];
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const loginScreen =
+    document.getElementById("loginScreen");
+
+const chatApp =
+    document.getElementById("chatApp");
+
+const nameInput =
+    document.getElementById("nameInput");
+
+const enterButton =
+    document.getElementById("enterButton");
+
+const connectionStatus =
+    document.getElementById("connectionStatus");
+
+const messages =
+    document.getElementById("messages");
+
+const messageInput =
+    document.getElementById("messageInput");
+
+const sendButton =
+    document.getElementById("sendButton");
+
+const fileButton =
+    document.getElementById("fileButton");
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const recordButton =
+    document.getElementById("recordButton");
+
+const onlineCount =
+    document.getElementById("onlineCount");
+
+const roomName =
+    document.getElementById("roomName");
+
+const mediaViewer =
+    document.getElementById("mediaViewer");
+
+const viewerContent =
+    document.getElementById("viewerContent");
+
+const closeViewer =
+    document.getElementById("closeViewer");
+
+const filePreviewPanel =
+    document.getElementById("filePreviewPanel");
+
+const previewThumbnail =
+    document.getElementById("previewThumbnail");
+
+const previewName =
+    document.getElementById("previewName");
+
+const previewType =
+    document.getElementById("previewType");
+
+const cancelFile =
+    document.getElementById("cancelFile");
+
+const roomModal =
+    document.getElementById("roomModal");
+
+const roomNameInput =
+    document.getElementById("roomNameInput");
+
+const closeRoomModal =
+    document.getElementById("closeRoomModal");
+
+const saveRoomName =
+    document.getElementById("saveRoomName");
+
+const userButton =
+    document.getElementById("userButton");
+
+const userModal =
+    document.getElementById("userModal");
+
+const userNameInput =
+    document.getElementById("userNameInput");
+
+const closeUserModal =
+    document.getElementById("closeUserModal");
+
+const saveUserName =
+    document.getElementById("saveUserName");
+
+const replyBar =
+    document.getElementById("replyBar");
+
+const replyBarTitle =
+    document.getElementById("replyBarTitle");
+
+const replyBarText =
+    document.getElementById("replyBarText");
+
+const cancelReply =
+    document.getElementById("cancelReply");
+
+/* # المان‌های جدید: ایموجی خاص، فریم و وضعیت */
+
+const specialEmojiButton =
+    document.getElementById("specialEmojiButton");
+
+const specialEmojiPanel =
+    document.getElementById("specialEmojiPanel");
+
+const emojiPanelTabs =
+    document.getElementById("emojiPanelTabs");
+
+const emojiPanelGrid =
+    document.getElementById("emojiPanelGrid");
+
+const frameButton =
+    document.getElementById("frameButton");
+
+const framePanel =
+    document.getElementById("framePanel");
+
+const frameOptionsContainer =
+    document.getElementById("frameOptions");
+
+const statusPicker =
+    document.getElementById("statusPicker");
+
+
+/* =====================================================
+   USER
+===================================================== */
+
+let currentUserName = "";
+
+let currentUserId = "";
+
+let selectedFile = null;
+
+let currentReply = null;
+
+let mediaRecorder = null;
+
+let audioChunks = [];
+
+let isRecording = false;
+
+let pollTimer = null;
+
+let onlineTimer = null;
+
+let knownMessageIds =
+    new Set();
+
+
+/* =====================================================
+   # وضعیت‌های جدید (state) مربوط به فریم و وضعیت کاربر
+===================================================== */
+
+/* قابی که برای پیام بعدی انتخاب شده؛ پیش‌فرض بدون قاب */
+let selectedFrame = "none";
+
+/* وضعیتِ ذخیره‌شده‌ی کاربر (روی لوکال‌استوریج هم نگه داشته می‌شود) */
+let currentUserStatus =
+    localStorage.getItem("chat_user_status") || "";
+
+/* وضعیتی که داخل مودال کاربر موقتاً انتخاب شده تا با دکمه ذخیره ثبت شود */
+let pendingUserStatus =
+    currentUserStatus;
+
+
+/* =====================================================
+   USER ID
+===================================================== */
+
+function createUserId(){
+
+    if(
+        window.crypto &&
+        crypto.randomUUID
+    ){
+        return crypto.randomUUID();
+    }
+
+    return (
+        Date.now().toString(36)
+        +
+        "-"
+        +
+        Math.random()
+            .toString(36)
+            .slice(2)
+    );
+}
+
+
+/* =====================================================
+   MESSAGE ID
+===================================================== */
+
+function createMessageId(){
+
+    return (
+        Date.now().toString(36)
+        +
+        "-"
+        +
+        Math.random()
+            .toString(36)
+            .substring(2,10)
+    );
+}
+
+
+/* =====================================================
+   SAVED USER
+===================================================== */
+
+const savedName =
+    localStorage.getItem(
+        "chat_user_name"
+    );
+
+if(savedName){
+
+    nameInput.value =
+        savedName;
+
+}
+
+
+const savedUserId =
+    localStorage.getItem(
+        "chat_user_id"
+    );
+
+if(savedUserId){
+
+    currentUserId =
+        savedUserId;
+
+}
+
+
+/* =====================================================
+   SERVER REQUEST
+===================================================== */
+
+async function apiRequest(
+    path,
+    options = {}
+){
+
+    const response =
+        await fetch(
+            SERVER_URL + path,
+            {
+                ...options,
+
+                headers:{
+                    "Content-Type":
+                        "application/json",
+
+                    ...(options.headers || {})
+                }
+            }
+        );
+
+
+    let data = null;
+
+
+    try{
+
+        data =
+            await response.json();
+
+    }
+    catch{
+
+        data = {
+            success:false,
+            error:"پاسخ سرور معتبر نیست."
+        };
+
+    }
+
+
+    if(!response.ok){
+
+        const error =
+            new Error(
+                data?.error ||
+                "خطای سرور"
+            );
+
+        error.status =
+            response.status;
+
+        error.data =
+            data;
+
+        throw error;
+
+    }
+
+
+    return data;
+
+}
+
+
+/* =====================================================
+   HEALTH CHECK
+===================================================== */
+
+async function checkServer(){
+
+    const response =
+        await fetch(
+            SERVER_URL +
+            "/api/health",
+            {
+                method:"GET"
+            }
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "سرور پاسخ مناسبی نداد."
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if(
+        !data.success ||
+        !data.database
+    ){
+
+        throw new Error(
+            "اتصال D1 برقرار نیست."
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+enterButton.addEventListener(
+    "click",
+    enterChat
+);
+
+
+nameInput.addEventListener(
+    "keydown",
+    function(e){
+
+        if(e.key === "Enter"){
+
+            enterChat();
+
+        }
+
+    }
+);
+
+
+async function enterChat(){
+
+    const name =
+        nameInput.value.trim();
+
+
+    if(!name){
+
+        connectionStatus.textContent =
+            "لطفاً ابتدا نام خود را وارد کنید.";
+
+        connectionStatus.style.color =
+            "#ff8197";
+
+        return;
+
+    }
+
+
+    if(name.length < 2){
+
+        connectionStatus.textContent =
+            "نام باید حداقل ۲ حرف داشته باشد.";
+
+        connectionStatus.style.color =
+            "#ff8197";
+
+        return;
+
+    }
+
+
+    currentUserName =
+        name;
+
+
+    if(!currentUserId){
+
+        currentUserId =
+            createUserId();
+
+        localStorage.setItem(
+            "chat_user_id",
+            currentUserId
+        );
+
+    }
+
+
+    localStorage.setItem(
+        "chat_user_name",
+        currentUserName
+    );
+
+
+    enterButton.disabled =
+        true;
+
+
+    connectionStatus.textContent =
+        "در حال اتصال به Cloudflare...";
+
+    connectionStatus.style.color =
+        "#91a4bc";
+
+
+    try{
+
+        await checkServer();
+
+
+        connectionStatus.textContent =
+            "اتصال به سرور موفق بود...";
+
+        connectionStatus.style.color =
+            "#46d9a5";
+
+
+        await loadRoomName();
+
+        await registerOnline();
+
+        await loadMessages();
+
+
+        loginScreen.style.display =
+            "none";
+
+        chatApp.style.display =
+            "flex";
+
+
+        startPolling();
+
+        startOnlineHeartbeat();
+
+
+        messageInput.focus();
+
+
+    }
+    catch(error){
+
+        console.error(error);
+
+
+        connectionStatus.textContent =
+            "اتصال به سرور برقرار نشد.";
+
+        connectionStatus.style.color =
+            "#ff8197";
+
+
+        alert(
+            "اتصال به سرور یا D1 برقرار نشد.\n\n" +
+            (
+                error.message ||
+                "خطای نامشخص"
+            )
+        );
+
+    }
+    finally{
+
+        enterButton.disabled =
+            false;
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD ROOM
+===================================================== */
+
+async function loadRoomName(){
+
+    try{
+
+        const data =
+            await apiRequest(
+                "/api/room"
+            );
+
+
+        if(
+            data.success &&
+            data.roomName
+        ){
+
+            roomName.textContent =
+                data.roomName;
+
+        }
+
+    }
+    catch(error){
+
+        console.error(
+            "ROOM ERROR",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   ONLINE
+===================================================== */
+
+async function registerOnline(){
+
+    try{
+
+        const data =
+            await apiRequest(
+                "/api/online",
+                {
+                    method:"POST",
+
+                    body:
+                        JSON.stringify({
+
+                            userId:
+                                currentUserId,
+
+                            userName:
+                                currentUserName,
+
+                            /* # وضعیت کاربر هم همراه هارت‌بیت آنلاین بودن فرستاده می‌شود.
+                               اگر بک‌اند این فیلد را ذخیره نکند، فقط روی پیام‌های خودِ
+                               کاربر (به‌صورت آنی) قابل مشاهده خواهد بود. */
+                            userStatus:
+                                currentUserStatus || ""
+
+                        })
+                }
+            );
+
+
+        if(
+            data.success
+        ){
+
+            onlineCount.textContent =
+                `${data.online} نفر آنلاین`;
+
+        }
+
+    }
+    catch(error){
+
+        console.error(
+            "ONLINE ERROR",
+            error
+        );
+
+    }
+
+}
+
+
+function startOnlineHeartbeat(){
+
+    if(onlineTimer){
+
+        clearInterval(
+            onlineTimer
+        );
+
+    }
+
+
+    onlineTimer =
+        setInterval(
+            registerOnline,
+            ONLINE_INTERVAL
+        );
+
+}
+
+
+/* =====================================================
+   LOAD MESSAGES
+===================================================== */
+
+async function loadMessages(){
+
+    try{
+
+        const data =
+            await apiRequest(
+                "/api/messages"
+            );
+
+
+        if(
+            !data.success
+        ){
+
+            return;
+
+        }
+
+
+        const serverMessages =
+            Array.isArray(
+                data.messages
+            )
+            ?
+            data.messages
+            :
+            [];
+
+
+        /*
+           پیام‌هایی که سرور حذف کرده
+           از صفحه فعلی هم حذف شوند.
+        */
+
+        const serverIds =
+            new Set(
+                serverMessages.map(
+                    message =>
+                    String(
+                        message.id
+                    )
+                )
+            );
+
+
+        document
+            .querySelectorAll(
+                ".message-row[data-message-id]"
+            )
+            .forEach(
+                row => {
+
+                    const id =
+                        row.dataset.messageId;
+
+
+                    if(
+                        id ===
+                        "welcome-message"
+                    ){
+
+                        return;
+
+                    }
+
+
+                    if(
+                        !serverIds.has(id)
+                    ){
+
+                        row.remove();
+
+                        knownMessageIds.delete(
+                            id
+                        );
+
+                    }
+
+                }
+            );
+
+
+        /*
+           پیام‌های سرور را اضافه کن.
+        */
+
+        for(
+            const serverMessage
+            of serverMessages
+        ){
+
+            const normalized =
+                normalizeServerMessage(
+                    serverMessage
+                );
+
+
+            if(
+                !normalized.messageId
+            ){
+
+                continue;
+
+            }
+
+
+            if(
+                knownMessageIds.has(
+                    normalized.messageId
+                )
+            ){
+
+                continue;
+
+            }
+
+
+            renderServerMessage(
+                normalized
+            );
+
+        }
+
+
+        if(
+            serverMessages.length
+        ){
+
+            knownMessageIds =
+                new Set(
+                    serverMessages.map(
+                        m =>
+                        String(
+                            m.id
+                        )
+                    )
+                );
+
+        }
+
+
+        scrollMessages(false);
+
+    }
+    catch(error){
+
+        console.error(
+            "LOAD MESSAGES ERROR",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   NORMALIZE SERVER MESSAGE
+===================================================== */
+
+function normalizeServerMessage(
+    message
+){
+
+    return {
+
+        messageId:
+            String(
+                message.id
+                ||
+                ""
+            ),
+
+        senderId:
+            String(
+                message.sender_id
+                ||
+                ""
+            ),
+
+        senderName:
+            message.sender_name
+            ||
+            "کاربر",
+
+        type:
+            message.type
+            ||
+            "text",
+
+        text:
+            message.text
+            ||
+            "",
+
+        fileName:
+            message.file_name
+            ||
+            "",
+
+        fileSize:
+            Number(
+                message.file_size
+                ||
+                0
+            ),
+
+        mimeType:
+            message.mime_type
+            ||
+            "",
+
+        fileData:
+            message.file_data
+            ||
+            null,
+
+        createdAt:
+            Number(
+                message.created_at
+                ||
+                Date.now()
+            ),
+
+        /* # قاب پیام از سرور. اگر بک‌اند این ستون را نداشته باشد،
+           مقدار همیشه "none" برمی‌گردد و پیام بدون قاب نمایش داده می‌شود. */
+        frame:
+            message.frame
+            ||
+            "none",
+
+        /* # وضعیت (ایموجی) فرستنده، مخصوص همین پیام.
+           نام ستون احتمالی در سرور را با توجه به بک‌اند واقعی
+           خودتان تنظیم/اضافه کنید (مثلاً sender_status). */
+        senderStatus:
+            message.sender_status
+            ||
+            message.senderStatus
+            ||
+            "",
+
+        replyTo:
+            message.reply_to_id
+            ?
+            {
+
+                messageId:
+                    String(
+                        message.reply_to_id
+                    ),
+
+                senderId:
+                    message.reply_to_sender_id
+                    ||
+                    "",
+
+                senderName:
+                    message.reply_to_sender_name
+                    ||
+                    "",
+
+                type:
+                    message.reply_to_type
+                    ||
+                    "text",
+
+                preview:
+                    message.reply_to_preview
+                    ||
+                    ""
+
+            }
+            :
+            null
+
+    };
+
+}
+
+
+/* =====================================================
+   # تبدیل پیام محلی (بلافاصله بعد از ارسال) به همان
+   ساختاری که normalizeServerMessage تولید می‌کند، تا بتوان
+   با renderServerMessage یکسان رندر کرد. این کار باعث می‌شود
+   فرستنده، فریم و وضعیت پیامش را فوری ببیند، حتی اگر بک‌اند
+   این فیلدها را ذخیره نکند.
+===================================================== */
+
+function normalizeLocalMessage(
+    payload
+){
+
+    return {
+
+        messageId: payload.messageId,
+
+        senderId: payload.senderId,
+
+        senderName: payload.senderName,
+
+        type: payload.type,
+
+        text: payload.text || "",
+
+        fileName: payload.fileName || "",
+
+        fileSize: payload.fileSize || 0,
+
+        mimeType: payload.mimeType || "",
+
+        fileData: payload.fileData || null,
+
+        createdAt: Date.now(),
+
+        frame: payload.frame || "none",
+
+        senderStatus: payload.senderStatus || "",
+
+        replyTo: payload.replyTo || null
+
+    };
+
+}
+
+
+/* =====================================================
+   RENDER SERVER MESSAGE
+===================================================== */
+
+function renderServerMessage(
+    data
+){
+
+    if(
+        knownMessageIds.has(
+            data.messageId
+        )
+    ){
+
+        return;
+
+    }
+
+
+    knownMessageIds.add(
+        data.messageId
+    );
+
+
+    const mine =
+        data.senderId ===
+        currentUserId;
+
+
+    const container =
+        createMessageContainer(
+            data,
+            mine
+        );
+
+
+    if(
+        data.type === "text"
+    ){
+
+        const text =
+            document.createElement(
+                "div"
+            );
+
+        text.className =
+            "message-text";
+
+        /* # به‌جای textContent ساده، متن را از فیلتر ایموجی‌های
+           خاص عبور می‌دهیم تا کدهایی مثل {{emoji:bard}} به
+           تصویر واقعی تبدیل شوند (و در ضمن امن باقی بماند). */
+        renderMessageTextContent(
+            text,
+            data.text
+        );
+
+
+        container.message.appendChild(
+            text
+        );
+
+    }
+
+    else{
+
+        renderServerFile(
+            container,
+            data
+        );
+
+    }
+
+
+    const time =
+        document.createElement(
+            "div"
+        );
+
+    time.className =
+        "message-time";
+
+    time.textContent =
+        formatMessageTime(
+            data.createdAt
+        );
+
+
+    container.message.appendChild(
+        time
+    );
+
+
+    messages.appendChild(
+        container.row
+    );
+
+}
+
+
+/* =====================================================
+   # امن‌سازی متن + جایگزینی کدهای ایموجی خاص با تصویر
+===================================================== */
+
+function escapeHtml(
+    str
+){
+
+    return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+}
+
+
+function renderMessageTextContent(
+    containerEl,
+    rawText
+){
+
+    const escaped =
+        escapeHtml(rawText);
+
+
+    /* الگوی {{emoji:id}} در متن پیدا و با تگ img جایگزین می‌شود */
+
+    const withEmojis =
+        escaped.replace(
+            /\{\{emoji:([a-z0-9-]+)\}\}/g,
+            function(match, id){
+
+                const icon =
+                    SPECIAL_EMOJI_MAP[id];
+
+
+                if(!icon){
+
+                    return match;
+
+                }
+
+
+                return (
+                    '<img class="special-emoji-inline" src="' +
+                    icon.url +
+                    '" alt="' +
+                    id +
+                    '">'
+                );
+
+            }
+        );
+
+
+    containerEl.innerHTML =
+        withEmojis;
+
+}
+
+
+/* =====================================================
+   SERVER FILE
+===================================================== */
+
+function renderServerFile(
+    container,
+    data
+){
+
+    if(
+        !data.fileData
+    ){
+
+        const text =
+            document.createElement(
+                "div"
+            );
+
+        text.className =
+            "message-text";
+
+        text.textContent =
+            "⚠️ اطلاعات فایل در سرور موجود نیست.";
+
+        container.message.appendChild(
+            text
+        );
+
+        return;
+
+    }
+
+
+    const url =
+        makeDataUrl(
+            data.fileData,
+            data.mimeType
+        );
+
+
+    if(
+        data.type === "image"
+    ){
+
+        addServerImage(
+            container,
+            data,
+            url
+        );
+
+        return;
+
+    }
+
+
+    if(
+        data.type === "video"
+    ){
+
+        addServerVideo(
+            container,
+            data,
+            url
+        );
+
+        return;
+
+    }
+
+
+    if(
+        data.type === "audio"
+    ){
+
+        addServerAudio(
+            container,
+            data,
+            url
+        );
+
+        return;
+
+    }
+
+
+    addServerGenericFile(
+        container,
+        data,
+        url
+    );
+
+}
+
+
+/* =====================================================
+   SERVER IMAGE
+===================================================== */
+
+function addServerImage(
+    container,
+    data,
+    url
+){
+
+    const image =
+        document.createElement(
+            "img"
+        );
+
+    image.className =
+        "media-preview image-preview";
+
+    image.src =
+        url;
+
+    image.alt =
+        data.fileName ||
+        "تصویر";
+
+
+    image.addEventListener(
+        "click",
+        function(){
+
+            openImage(
+                url
+            );
+
+        }
+    );
+
+
+    container.message.appendChild(
+        image
+    );
+
+}
+
+
+/* =====================================================
+   SERVER VIDEO
+===================================================== */
+
+function addServerVideo(
+    container,
+    data,
+    url
+){
+
+    const video =
+        document.createElement(
+            "video"
+        );
+
+    video.className =
+        "media-preview video-preview";
+
+    video.src =
+        url;
+
+    video.controls =
+        true;
+
+    video.playsInline =
+        true;
+
+    video.preload =
+        "metadata";
+
+
+    video.addEventListener(
+        "dblclick",
+        function(){
+
+            openVideo(
+                url
+            );
+
+        }
+    );
+
+
+    container.message.appendChild(
+        video
+    );
+
+}
+
+
+/* =====================================================
+   SERVER AUDIO
+===================================================== */
+
+function addServerAudio(
+    container,
+    data,
+    url
+){
+
+    const audioBox =
+        document.createElement(
+            "div"
+        );
+
+    audioBox.className =
+        "audio-message";
+
+
+    const audio =
+        document.createElement(
+            "audio"
+        );
+
+    audio.controls =
+        true;
+
+    audio.src =
+        url;
+
+
+    audioBox.appendChild(
+        audio
+    );
+
+
+    container.message.appendChild(
+        audioBox
+    );
+
+}
+
+
+/* =====================================================
+   SERVER GENERIC FILE
+===================================================== */
+
+function addServerGenericFile(
+    container,
+    data,
+    url
+){
+
+    const fileBox =
+        document.createElement(
+            "div"
+        );
+
+    fileBox.className =
+        "file-box";
+
+
+    const icon =
+        document.createElement(
+            "div"
+        );
+
+    icon.className =
+        "file-icon";
+
+    icon.textContent =
+        "📄";
+
+
+    const info =
+        document.createElement(
+            "div"
+        );
+
+    info.className =
+        "file-info";
+
+
+    const name =
+        document.createElement(
+            "div"
+        );
+
+    name.className =
+        "file-name";
+
+    name.textContent =
+        data.fileName ||
+        "فایل";
+
+
+    const size =
+        document.createElement(
+            "div"
+        );
+
+    size.className =
+        "file-size";
+
+    size.textContent =
+        formatFileSize(
+            data.fileSize
+        );
+
+
+    info.appendChild(name);
+
+    info.appendChild(size);
+
+
+    const download =
+        document.createElement(
+            "button"
+        );
+
+    download.className =
+        "download-button";
+
+    download.textContent =
+        "⬇";
+
+    download.title =
+        "دانلود";
+
+
+    download.addEventListener(
+        "click",
+        function(){
+
+            downloadFile(
+                url,
+                data.fileName ||
+                "file"
+            );
+
+        }
+    );
+
+
+    fileBox.appendChild(icon);
+
+    fileBox.appendChild(info);
+
+    fileBox.appendChild(download);
+
+
+    container.message.appendChild(
+        fileBox
+    );
+
+}
+
+
+/* =====================================================
+   DATA URL
+===================================================== */
+
+function makeDataUrl(
+    fileData,
+    mimeType
+){
+
+    if(
+        !fileData
+    ){
+
+        return "";
+
+    }
+
+
+    if(
+        fileData.startsWith(
+            "data:"
+        )
+    ){
+
+        return fileData;
+
+    }
+
+
+    return (
+        "data:"
+        +
+        (
+            mimeType ||
+            "application/octet-stream"
+        )
+        +
+        ";base64,"
+        +
+        fileData
+    );
+
+}
+
+
+/* =====================================================
+   POLLING
+===================================================== */
+
+function startPolling(){
+
+    if(pollTimer){
+
+        clearInterval(
+            pollTimer
+        );
+
+    }
+
+
+    pollTimer =
+        setInterval(
+            async function(){
+
+                await loadMessages();
+
+                await registerOnline();
+
+            },
+            POLL_INTERVAL
+        );
+
+}
+
+
+/* =====================================================
+   SEND TEXT
+===================================================== */
+
+messageInput.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+            e.key === "Enter"
+            &&
+            !e.shiftKey
+        ){
+
+            e.preventDefault();
+
+            sendTextMessage();
+
+        }
+
+    }
+);
+
+
+sendButton.addEventListener(
+    "click",
+    function(){
+
+        if(selectedFile){
+
+            sendSelectedFile();
+
+        }
+        else{
+
+            sendTextMessage();
+
+        }
+
+    }
+);
+
+
+async function sendTextMessage(){
+
+    const text =
+        messageInput.value.trim();
+
+
+    if(!text){
+
+        return;
+
+    }
+
+
+    const data = {
+
+        messageId:
+            createMessageId(),
+
+        senderId:
+            currentUserId,
+
+        senderName:
+            currentUserName,
+
+        type:
+            "text",
+
+        text:
+            text,
+
+        /* # قاب انتخاب‌شده و وضعیت فعلی کاربر همراه پیام ارسال می‌شود */
+        frame:
+            selectedFrame,
+
+        senderStatus:
+            currentUserStatus,
+
+        replyTo:
+            currentReply
+
+    };
+
+
+    sendButton.disabled =
+        true;
+
+
+    try{
+
+        const result =
+            await apiRequest(
+                "/api/messages",
+                {
+
+                    method:"POST",
+
+                    body:
+                        JSON.stringify(
+                            data
+                        )
+
+                }
+            );
+
+
+        if(
+            result.success
+        ){
+
+            /* # نمایش آنیِ خودِ پیام (optimistic) با فریم/وضعیت درست،
+               مستقل از اینکه بک‌اند این فیلدها را ذخیره کند یا نه */
+            renderServerMessage(
+                normalizeLocalMessage(data)
+            );
+
+            messageInput.value =
+                "";
+
+            resizeTextarea();
+
+            cancelReplyMode();
+
+            resetFrameSelection();
+
+            await loadMessages();
+
+            scrollMessages();
+
+        }
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        showServerError(
+            error
+        );
+
+    }
+    finally{
+
+        sendButton.disabled =
+            false;
+
+        messageInput.focus();
+
+    }
+
+}
+
+
+/* =====================================================
+   FILE BUTTON
+===================================================== */
+
+fileButton.addEventListener(
+    "click",
+    function(){
+
+        fileInput.click();
+
+    }
+);
+
+
+fileInput.addEventListener(
+    "change",
+    function(){
+
+        const file =
+            fileInput.files[0];
+
+
+        if(!file){
+
+            return;
+
+        }
+
+
+        if(
+            file.size >
+            MAX_FILE_BYTES
+        ){
+
+            alert(
+                "این فایل برای ذخیره روی سرور بیش از حد مجاز است.\n\n" +
+                "حداکثر حجم فایل: " +
+                formatFileSize(
+                    MAX_FILE_BYTES
+                )
+            );
+
+
+            fileInput.value =
+                "";
+
+            selectedFile =
+                null;
+
+            return;
+
+        }
+
+
+        selectedFile =
+            file;
+
+
+        showFilePreview(
+            file
+        );
+
+    }
+);
+
+
+/* =====================================================
+   FILE PREVIEW
+===================================================== */
+
+function showFilePreview(
+    file
+){
+
+    filePreviewPanel.style.display =
+        "block";
+
+
+    previewName.textContent =
+        file.name;
+
+
+    previewType.textContent =
+        getFileType(file)
+        +
+        " • "
+        +
+        formatFileSize(
+            file.size
+        );
+
+
+    if(
+        file.type.startsWith(
+            "image/"
+        )
+    ){
+
+        const url =
+            URL.createObjectURL(
+                file
+            );
+
+        previewThumbnail.src =
+            url;
+
+        previewThumbnail.style.display =
+            "block";
+
+    }
+    else{
+
+        previewThumbnail.removeAttribute(
+            "src"
+        );
+
+        previewThumbnail.style.display =
+            "none";
+
+    }
+
+}
+
+
+cancelFile.addEventListener(
+    "click",
+    cancelSelectedFile
+);
+
+
+function cancelSelectedFile(){
+
+    selectedFile =
+        null;
+
+    fileInput.value =
+        "";
+
+    previewThumbnail.removeAttribute(
+        "src"
+    );
+
+    filePreviewPanel.style.display =
+        "none";
+
+}
+
+
+/* =====================================================
+   FILE TO BASE64
+===================================================== */
+
+function fileToBase64(
+    file
+){
+
+    return new Promise(
+        function(resolve,reject){
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(){
+
+                    const result =
+                        reader.result;
+
+
+                    const base64 =
+                        String(
+                            result
+                        ).split(
+                            ","
+                        )[1];
+
+
+                    resolve(
+                        base64
+                    );
+
+                };
+
+
+            reader.onerror =
+                function(){
+
+                    reject(
+                        new Error(
+                            "خواندن فایل انجام نشد."
+                        )
+                    );
+
+                };
+
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   SEND FILE
+===================================================== */
+
+async function sendSelectedFile(){
+
+    if(!selectedFile){
+
+        return;
+
+    }
+
+
+    const file =
+        selectedFile;
+
+
+    if(
+        file.size >
+        MAX_FILE_BYTES
+    ){
+
+        alert(
+            "حجم فایل بیش از حد مجاز است."
+        );
+
+        return;
+
+    }
+
+
+    sendButton.disabled =
+        true;
+
+    fileButton.disabled =
+        true;
+
+
+    try{
+
+        connectionStatus.textContent =
+            "در حال آماده‌سازی فایل...";
+
+
+        const base64 =
+            await fileToBase64(
+                file
+            );
+
+
+        const type =
+            getMessageType(
+                file
+            );
+
+
+        const data = {
+
+            messageId:
+                createMessageId(),
+
+            senderId:
+                currentUserId,
+
+            senderName:
+                currentUserName,
+
+            type:
+                type,
+
+            fileName:
+                file.name,
+
+            fileSize:
+                file.size,
+
+            mimeType:
+                file.type ||
+                "application/octet-stream",
+
+            fileData:
+                base64,
+
+            /* # فریم و وضعیت برای پیام‌های فایل هم اعمال می‌شود */
+            frame:
+                selectedFrame,
+
+            senderStatus:
+                currentUserStatus,
+
+            replyTo:
+                currentReply
+
+        };
+
+
+        connectionStatus.textContent =
+            "در حال ارسال فایل به سرور...";
+
+
+        const result =
+            await apiRequest(
+                "/api/messages",
+                {
+
+                    method:"POST",
+
+                    body:
+                        JSON.stringify(
+                            data
+                        )
+
+                }
+            );
+
+
+        if(
+            result.success
+        ){
+
+            renderServerMessage(
+                normalizeLocalMessage(data)
+            );
+
+            cancelSelectedFile();
+
+            cancelReplyMode();
+
+            resetFrameSelection();
+
+            await loadMessages();
+
+            scrollMessages();
+
+        }
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        showServerError(
+            error
+        );
+
+    }
+    finally{
+
+        sendButton.disabled =
+            false;
+
+        fileButton.disabled =
+            false;
+
+        connectionStatus.textContent =
+            "اتصال به سرور برقرار است.";
+
+    }
+
+}
+
+
+/* =====================================================
+   SERVER ERROR
+===================================================== */
+
+function showServerError(
+    error
+){
+
+    if(
+        error?.status === 413
+    ){
+
+        alert(
+            "فایل یا اطلاعات ارسال‌شده بیش از حد مجاز سرور است."
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        error?.message ||
+        "ارسال پیام انجام نشد."
+    );
+
+}
+
+
+/* =====================================================
+   MESSAGE CONTAINER
+===================================================== */
+
+function createMessageContainer(
+    data,
+    mine
+){
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "message-row "
+        +
+        (
+            mine
+            ?
+            "me"
+            :
+            "other"
+        );
+
+
+    row.dataset.messageId =
+        data.messageId;
+
+
+    row.dataset.senderId =
+        data.senderId;
+
+
+    const message =
+        document.createElement(
+            "div"
+        );
+
+
+    message.className =
+        "message";
+
+
+    /* # اعمال کلاس فریم روی حباب پیام.
+       استایل واقعی هر فریم (نئونی آبی/صورتی، طلایی، ساده)
+       در فایل style.css تعریف می‌شود. */
+
+    const frameId =
+        data.frame &&
+        FRAME_OPTIONS.some(f => f.id === data.frame)
+        ?
+        data.frame
+        :
+        "none";
+
+
+    if(frameId !== "none"){
+
+        message.classList.add(
+            "frame-" + frameId
+        );
+
+    }
+
+
+    if(data.replyTo){
+
+        message.appendChild(
+            createReplyPreview(
+                data.replyTo
+            )
+        );
+
+    }
+
+
+    const senderRow =
+        document.createElement(
+            "div"
+        );
+
+    senderRow.className =
+        "sender-name-row";
+
+
+    const sender =
+        document.createElement(
+            "span"
+        );
+
+    sender.className =
+        "sender-name";
+
+    sender.textContent =
+        data.senderName ||
+        "کاربر";
+
+
+    senderRow.appendChild(
+        sender
+    );
+
+
+    /* # نمایش ایموجی وضعیت کنار اسم فرستنده (مثل دیسکورد) */
+
+    if(data.senderStatus){
+
+        const statusSpan =
+            document.createElement(
+                "span"
+            );
+
+        statusSpan.className =
+            "status-emoji";
+
+        statusSpan.textContent =
+            data.senderStatus;
+
+        senderRow.appendChild(
+            statusSpan
+        );
+
+    }
+
+
+    message.appendChild(
+        senderRow
+    );
+
+
+    const menuButton =
+        document.createElement(
+            "button"
+        );
+
+    menuButton.className =
+        "message-menu-button";
+
+    menuButton.textContent =
+        "⋮";
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+    menu.className =
+        "message-menu";
+
+
+    const replyButton =
+        document.createElement(
+            "button"
+        );
+
+    replyButton.className =
+        "message-action-button";
+
+    replyButton.textContent =
+        "↩️ پاسخ";
+
+
+    replyButton.addEventListener(
+        "click",
+        function(e){
+
+            e.stopPropagation();
+
+            startReply(
+                data
+            );
+
+            menu.classList.remove(
+                "active"
+            );
+
+        }
+    );
+
+
+    menu.appendChild(
+        replyButton
+    );
+
+
+    if(
+        data.senderId ===
+        currentUserId
+    ){
+
+        const deleteButton =
+            document.createElement(
+                "button"
+            );
+
+        deleteButton.className =
+            "message-action-button delete-message-button";
+
+        deleteButton.textContent =
+            "🗑 حذف پیام";
+
+
+        deleteButton.addEventListener(
+            "click",
+            function(e){
+
+                e.stopPropagation();
+
+                deleteOwnMessage(
+                    row,
+                    data
+                );
+
+            }
+        );
+
+
+        menu.appendChild(
+            deleteButton
+        );
+
+    }
+
+
+    menuButton.addEventListener(
+        "click",
+        function(e){
+
+            e.stopPropagation();
+
+            closeAllMessageMenus();
+
+            menu.classList.toggle(
+                "active"
+            );
+
+        }
+    );
+
+
+    message.appendChild(
+        menuButton
+    );
+
+    message.appendChild(
+        menu
+    );
+
+
+    row.appendChild(
+        message
+    );
+
+
+    return {
+
+        row,
+        message
+
+    };
+
+}
+
+
+/* =====================================================
+   REPLY PREVIEW
+===================================================== */
+
+function createReplyPreview(
+    reply
+){
+
+    const box =
+        document.createElement(
+            "div"
+        );
+
+    box.className =
+        "reply-preview";
+
+
+    const name =
+        document.createElement(
+            "div"
+        );
+
+    name.className =
+        "reply-preview-name";
+
+    name.textContent =
+        "پاسخ به " +
+        (
+            reply.senderName ||
+            "کاربر"
+        );
+
+
+    const text =
+        document.createElement(
+            "div"
+        );
+
+    text.className =
+        "reply-preview-text";
+
+    text.textContent =
+        getReplyPreviewText(
+            reply
+        );
+
+
+    box.appendChild(
+        name
+    );
+
+    box.appendChild(
+        text
+    );
+
+
+    box.addEventListener(
+        "click",
+        function(){
+
+            scrollToMessage(
+                reply.messageId
+            );
+
+        }
+    );
+
+
+    return box;
+
+}
+
+
+function getReplyPreviewText(
+    data
+){
+
+    if(
+        data.preview
+    ){
+
+        return data.preview;
+
+    }
+
+
+    switch(data.type){
+
+        case "image":
+            return "📷 عکس";
+
+        case "video":
+            return "🎬 ویدیو";
+
+        case "audio":
+            return "🎙️ ویس";
+
+        case "file":
+            return (
+                "📄 " +
+                (
+                    data.fileName ||
+                    "فایل"
+                )
+            );
+
+        default:
+            return "پیام متنی";
+
+    }
+
+}
+
+
+/* =====================================================
+   START REPLY
+===================================================== */
+
+function startReply(
+    data
+){
+
+    currentReply = {
+
+        messageId:
+            data.messageId,
+
+        senderId:
+            data.senderId,
+
+        senderName:
+            data.senderName,
+
+        type:
+            data.type,
+
+        preview:
+            getMessagePreview(
+                data
+            )
+
+    };
+
+
+    replyBarTitle.textContent =
+        "ریپلای به " +
+        data.senderName;
+
+
+    replyBarText.textContent =
+        currentReply.preview;
+
+
+    replyBar.classList.add(
+        "active"
+    );
+
+
+    messageInput.focus();
+
+}
+
+
+function getMessagePreview(
+    data
+){
+
+    if(
+        data.type ===
+        "text"
+    ){
+
+        return (
+            data.text ||
+            "پیام متنی"
+        );
+
+    }
+
+
+    if(
+        data.type ===
+        "image"
+    ){
+
+        return "📷 عکس";
+
+    }
+
+
+    if(
+        data.type ===
+        "video"
+    ){
+
+        return "🎬 ویدیو";
+
+    }
+
+
+    if(
+        data.type ===
+        "audio"
+    ){
+
+        return "🎙️ ویس";
+
+    }
+
+
+    if(
+        data.type ===
+        "file"
+    ){
+
+        return (
+            "📄 " +
+            (
+                data.fileName ||
+                "فایل"
+            )
+        );
+
+    }
+
+
+    return "پیام";
+
+}
+
+
+cancelReply.addEventListener(
+    "click",
+    cancelReplyMode
+);
+
+
+function cancelReplyMode(){
+
+    currentReply =
+        null;
+
+    replyBar.classList.remove(
+        "active"
+    );
+
+}
+
+
+/* =====================================================
+   SCROLL TO MESSAGE
+===================================================== */
+
+function scrollToMessage(
+    messageId
+){
+
+    const row =
+        document.querySelector(
+            `[data-message-id="${CSS.escape(messageId)}"]`
+        );
+
+
+    if(!row){
+
+        return;
+
+    }
+
+
+    row.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+    });
+
+
+    const message =
+        row.querySelector(
+            ".message"
+        );
+
+
+    if(message){
+
+        message.classList.remove(
+            "highlight-message"
+        );
+
+
+        void message.offsetWidth;
+
+
+        message.classList.add(
+            "highlight-message"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   DELETE
+===================================================== */
+
+async function deleteOwnMessage(
+    row,
+    data
+){
+
+    if(
+        data.senderId !==
+        currentUserId
+    ){
+
+        alert(
+            "شما اجازه حذف این پیام را ندارید."
+        );
+
+        return;
+
+    }
+
+
+    const ok =
+        confirm(
+            "مطمئنی می‌خواهی پیام حذف شود؟"
+        );
+
+
+    if(!ok){
+
+        return;
+
+    }
+
+
+    try{
+
+        const result =
+            await apiRequest(
+                "/api/messages/" +
+                encodeURIComponent(
+                    data.messageId
+                ),
+                {
+
+                    method:"DELETE",
+
+                    body:
+                        JSON.stringify({
+
+                            senderId:
+                                currentUserId
+
+                        })
+
+                }
+            );
+
+
+        if(
+            result.success
+        ){
+
+            row.remove();
+
+            knownMessageIds.delete(
+                data.messageId
+            );
+
+        }
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        showServerError(
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   MENUS + پنل‌های ایموجی/فریم
+   # با کلیک بیرون از منو یا پنل‌ها، همه بسته می‌شوند.
+===================================================== */
+
+document.addEventListener(
+    "click",
+    function(){
+
+        closeAllMessageMenus();
+
+        closeSpecialEmojiPanel();
+
+        closeFramePanel();
+
+    }
+);
+
+
+function closeAllMessageMenus(){
+
+    document
+        .querySelectorAll(
+            ".message-menu.active"
+        )
+        .forEach(
+            menu =>
+            menu.classList.remove(
+                "active"
+            )
+        );
+
+}
+
+
+/* =====================================================
+   # پنل ایموجی‌های خاص: ساخت، باز/بسته کردن، درج در متن
+===================================================== */
+
+function buildSpecialEmojiPanel(){
+
+    emojiPanelTabs.innerHTML = "";
+
+    emojiPanelGrid.innerHTML = "";
+
+
+    SPECIAL_EMOJI_PACKS.forEach(
+        function(pack, index){
+
+            const tab =
+                document.createElement(
+                    "button"
+                );
+
+            tab.type = "button";
+
+            tab.className =
+                "emoji-tab" +
+                (index === 0 ? " active" : "");
+
+            tab.textContent =
+                pack.label;
+
+            tab.dataset.packName =
+                pack.name;
+
+
+            tab.addEventListener(
+                "click",
+                function(e){
+
+                    e.stopPropagation();
+
+                    emojiPanelTabs
+                        .querySelectorAll(".emoji-tab")
+                        .forEach(t => t.classList.remove("active"));
+
+                    tab.classList.add("active");
+
+                    renderEmojiGrid(pack);
+
+                }
+            );
+
+
+            emojiPanelTabs.appendChild(tab);
+
+        }
+    );
+
+
+    /* دسته اول به‌صورت پیش‌فرض نمایش داده می‌شود */
+
+    if(SPECIAL_EMOJI_PACKS.length){
+
+        renderEmojiGrid(
+            SPECIAL_EMOJI_PACKS[0]
+        );
+
+    }
+
+}
+
+
+function renderEmojiGrid(
+    pack
+){
+
+    emojiPanelGrid.innerHTML = "";
+
+
+    pack.icons.forEach(function(icon){
+
+        const item =
+            document.createElement(
+                "button"
+            );
+
+        item.type = "button";
+
+        item.className =
+            "emoji-item";
+
+        item.title =
+            icon.id;
+
+
+        const img =
+            document.createElement(
+                "img"
+            );
+
+        img.src = icon.url;
+
+        img.alt = icon.id;
+
+
+        item.appendChild(img);
+
+
+        item.addEventListener(
+            "click",
+            function(e){
+
+                e.stopPropagation();
+
+                insertEmojiToken(
+                    icon.id
+                );
+
+            }
+        );
+
+
+        emojiPanelGrid.appendChild(
+            item
+        );
+
+    });
+
+}
+
+
+function insertEmojiToken(
+    id
+){
+
+    const token =
+        "{{emoji:" + id + "}}";
+
+
+    const start =
+        messageInput.selectionStart ??
+        messageInput.value.length;
+
+    const end =
+        messageInput.selectionEnd ??
+        messageInput.value.length;
+
+
+    const before =
+        messageInput.value.slice(0, start);
+
+    const after =
+        messageInput.value.slice(end);
+
+
+    messageInput.value =
+        before + token + after;
+
+
+    const cursorPos =
+        (before + token).length;
+
+    messageInput.focus();
+
+    messageInput.setSelectionRange(
+        cursorPos,
+        cursorPos
+    );
+
+
+    resizeTextarea();
+
+    closeSpecialEmojiPanel();
+
+}
+
+
+function toggleSpecialEmojiPanel(){
+
+    const isOpen =
+        specialEmojiPanel.style.display === "flex";
+
+
+    closeFramePanel();
+
+
+    if(isOpen){
+
+        closeSpecialEmojiPanel();
+
+    }
+    else{
+
+        specialEmojiPanel.style.display = "flex";
+
+        specialEmojiPanel.classList.add("active");
+
+    }
+
+}
+
+
+function closeSpecialEmojiPanel(){
+
+    specialEmojiPanel.style.display = "none";
+
+    specialEmojiPanel.classList.remove("active");
+
+}
+
+
+specialEmojiButton.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        toggleSpecialEmojiPanel();
+
+    }
+);
+
+
+specialEmojiPanel.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+    }
+);
+
+
+/* =====================================================
+   # پنل انتخاب فریم پیام: ساخت، انتخاب، بازنشانی
+===================================================== */
+
+function buildFramePanel(){
+
+    frameOptionsContainer.innerHTML = "";
+
+
+    FRAME_OPTIONS.forEach(function(option){
+
+        const btn =
+            document.createElement(
+                "button"
+            );
+
+        btn.type = "button";
+
+        btn.className =
+            "frame-option" +
+            (option.id === selectedFrame ? " active" : "");
+
+        btn.dataset.frameId =
+            option.id;
+
+        btn.innerHTML =
+            '<span class="frame-option-emoji">' +
+            option.emoji +
+            '</span><span>' +
+            option.label +
+            '</span>';
+
+
+        btn.addEventListener(
+            "click",
+            function(e){
+
+                e.stopPropagation();
+
+                selectFrame(option.id);
+
+            }
+        );
+
+
+        frameOptionsContainer.appendChild(btn);
+
+    });
+
+}
+
+
+function selectFrame(
+    frameId
+){
+
+    selectedFrame = frameId;
+
+
+    frameOptionsContainer
+        .querySelectorAll(".frame-option")
+        .forEach(function(btn){
+
+            btn.classList.toggle(
+                "active",
+                btn.dataset.frameId === frameId
+            );
+
+        });
+
+
+    /* دکمه‌ی فریم را طوری آپدیت می‌کنیم که معلوم باشد قابی انتخاب شده */
+
+    const chosen =
+        FRAME_OPTIONS.find(f => f.id === frameId);
+
+    frameButton.classList.toggle(
+        "has-frame",
+        frameId !== "none"
+    );
+
+    frameButton.title =
+        chosen ?
+        ("قاب پیام: " + chosen.label) :
+        "قاب پیام";
+
+
+    closeFramePanel();
+
+}
+
+
+function resetFrameSelection(){
+
+    selectFrame("none");
+
+}
+
+
+function toggleFramePanel(){
+
+    const isOpen =
+        framePanel.style.display === "flex";
+
+
+    closeSpecialEmojiPanel();
+
+
+    if(isOpen){
+
+        closeFramePanel();
+
+    }
+    else{
+
+        framePanel.style.display = "flex";
+
+        framePanel.classList.add("active");
+
+    }
+
+}
+
+
+function closeFramePanel(){
+
+    framePanel.style.display = "none";
+
+    framePanel.classList.remove("active");
+
+}
+
+
+frameButton.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+        toggleFramePanel();
+
+    }
+);
+
+
+framePanel.addEventListener(
+    "click",
+    function(e){
+
+        e.stopPropagation();
+
+    }
+);
+
+
+/* =====================================================
+   # ساخت انتخاب‌گر وضعیت (Status Picker) داخل مودال کاربر
+===================================================== */
+
+function buildStatusPicker(){
+
+    statusPicker.innerHTML = "";
+
+
+    /* گزینه‌ی «بدون وضعیت» برای پاک کردن وضعیت فعلی */
+
+    const clearBtn =
+        document.createElement(
+            "button"
+        );
+
+    clearBtn.type = "button";
+
+    clearBtn.className =
+        "status-emoji-btn" +
+        (pendingUserStatus === "" ? " active" : "");
+
+    clearBtn.textContent = "❌";
+
+    clearBtn.title = "بدون وضعیت";
+
+
+    clearBtn.addEventListener(
+        "click",
+        function(e){
+
+            e.stopPropagation();
+
+            selectStatusInModal("");
+
+        }
+    );
+
+
+    statusPicker.appendChild(clearBtn);
+
+
+    STATUS_EMOJIS.forEach(function(emoji){
+
+        const btn =
+            document.createElement(
+                "button"
+            );
+
+        btn.type = "button";
+
+        btn.className =
+            "status-emoji-btn" +
+            (pendingUserStatus === emoji ? " active" : "");
+
+        btn.textContent = emoji;
+
+
+        btn.addEventListener(
+            "click",
+            function(e){
+
+                e.stopPropagation();
+
+                selectStatusInModal(emoji);
+
+            }
+        );
+
+
+        statusPicker.appendChild(btn);
+
+    });
+
+}
+
+
+function selectStatusInModal(
+    emoji
+){
+
+    pendingUserStatus = emoji;
+
+
+    statusPicker
+        .querySelectorAll(".status-emoji-btn")
+        .forEach(function(btn){
+
+            btn.classList.toggle(
+                "active",
+                btn.textContent === emoji ||
+                (emoji === "" && btn.textContent === "❌")
+            );
+
+        });
+
+}
+
+
+/* =====================================================
+   RECORD AUDIO
+===================================================== */
+
+recordButton.addEventListener(
+    "click",
+    toggleRecording
+);
+
+
+async function toggleRecording(){
+
+    if(isRecording){
+
+        stopRecording();
+
+        return;
+
+    }
+
+
+    try{
+
+        const stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio:true
+                });
+
+
+        audioChunks = [];
+
+
+        mediaRecorder =
+            new MediaRecorder(
+                stream
+            );
+
+
+        mediaRecorder.ondataavailable =
+            function(event){
+
+                if(
+                    event.data.size > 0
+                ){
+
+                    audioChunks.push(
+                        event.data
+                    );
+
+                }
+
+            };
+
+
+        mediaRecorder.onstop =
+            async function(){
+
+                const audioBlob =
+                    new Blob(
+                        audioChunks,
+                        {
+                            type:
+                                mediaRecorder.mimeType ||
+                                "audio/webm"
+                        }
+                    );
+
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                        track.stop()
+                    );
+
+
+                if(
+                    audioBlob.size >
+                    MAX_FILE_BYTES
+                ){
+
+                    alert(
+                        "پیام صوتی بیش از حد مجاز شد."
+                    );
+
+                    return;
+
+                }
+
+
+                try{
+
+                    sendButton.disabled =
+                        true;
+
+                    recordButton.disabled =
+                        true;
+
+
+                    const base64 =
+                        await fileToBase64(
+                            new File(
+                                [audioBlob],
+                                "پیام-صوتی.webm",
+                                {
+                                    type:
+                                        audioBlob.type
+                                }
+                            )
+                        );
+
+
+                    const data = {
+
+                        messageId:
+                            createMessageId(),
+
+                        senderId:
+                            currentUserId,
+
+                        senderName:
+                            currentUserName,
+
+                        type:
+                            "audio",
+
+                        fileName:
+                            "پیام-صوتی.webm",
+
+                        fileSize:
+                            audioBlob.size,
+
+                        mimeType:
+                            audioBlob.type,
+
+                        fileData:
+                            base64,
+
+                        /* # فریم و وضعیت روی پیام صوتی هم اعمال می‌شود */
+                        frame:
+                            selectedFrame,
+
+                        senderStatus:
+                            currentUserStatus,
+
+                        replyTo:
+                            currentReply
+
+                    };
+
+
+                    const result =
+                        await apiRequest(
+                            "/api/messages",
+                            {
+
+                                method:"POST",
+
+                                body:
+                                    JSON.stringify(
+                                        data
+                                    )
+
+                            }
+                        );
+
+
+                    if(
+                        result.success
+                    ){
+
+                        renderServerMessage(
+                            normalizeLocalMessage(data)
+                        );
+
+                        cancelReplyMode();
+
+                        resetFrameSelection();
+
+                        await loadMessages();
+
+                        scrollMessages();
+
+                    }
+
+                }
+                catch(error){
+
+                    console.error(error);
+
+                    showServerError(
+                        error
+                    );
+
+                }
+                finally{
+
+                    sendButton.disabled =
+                        false;
+
+                    recordButton.disabled =
+                        false;
+
+                }
+
+            };
+
+
+        mediaRecorder.start();
+
+        isRecording =
+            true;
+
+
+        recordButton.classList.add(
+            "recording"
+        );
+
+        recordButton.textContent =
+            "⏹";
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        alert(
+            "دسترسی به میکروفون داده نشد."
+        );
+
+    }
+
+}
+
+
+function stopRecording(){
+
+    if(
+        mediaRecorder &&
+        mediaRecorder.state !==
+        "inactive"
+    ){
+
+        mediaRecorder.stop();
+
+    }
+
+
+    isRecording =
+        false;
+
+
+    recordButton.classList.remove(
+        "recording"
+    );
+
+    recordButton.textContent =
+        "🎙️";
+
+}
+
+
+/* =====================================================
+   VIEWER
+===================================================== */
+
+function openImage(
+    url
+){
+
+    viewerContent.innerHTML =
+        "";
+
+
+    const img =
+        document.createElement(
+            "img"
+        );
+
+    img.src =
+        url;
+
+
+    viewerContent.appendChild(
+        img
+    );
+
+
+    mediaViewer.classList.add(
+        "active"
+    );
+
+}
+
+
+function openVideo(
+    url
+){
+
+    viewerContent.innerHTML =
+        "";
+
+
+    const video =
+        document.createElement(
+            "video"
+        );
+
+    video.src =
+        url;
+
+    video.controls =
+        true;
+
+    video.autoplay =
+        true;
+
+    video.playsInline =
+        true;
+
+
+    viewerContent.appendChild(
+        video
+    );
+
+
+    mediaViewer.classList.add(
+        "active"
+    );
+
+}
+
+
+closeViewer.addEventListener(
+    "click",
+    closeMediaViewer
+);
+
+
+mediaViewer.addEventListener(
+    "click",
+    function(e){
+
+        if(
+            e.target ===
+            mediaViewer
+        ){
+
+            closeMediaViewer();
+
+        }
+
+    }
+);
+
+
+function closeMediaViewer(){
+
+    mediaViewer.classList.remove(
+        "active"
+    );
+
+    viewerContent.innerHTML =
+        "";
+
+}
+
+
+/* =====================================================
+   ROOM
+===================================================== */
+
+roomName.addEventListener(
+    "click",
+    function(){
+
+        roomNameInput.value =
+            roomName.textContent.trim();
+
+        roomModal.classList.add(
+            "active"
+        );
+
+        roomNameInput.focus();
+
+    }
+);
+
+
+closeRoomModal.addEventListener(
+    "click",
+    function(){
+
+        roomModal.classList.remove(
+            "active"
+        );
+
+    }
+);
+
+
+saveRoomName.addEventListener(
+    "click",
+    async function(){
+
+        const newName =
+            roomNameInput.value.trim();
+
+
+        if(!newName){
+
+            alert(
+                "نام اتاق خالی است."
+            );
+
+            return;
+
+        }
+
+
+        try{
+
+            const result =
+                await apiRequest(
+                    "/api/room",
+                    {
+
+                        method:"POST",
+
+                        body:
+                            JSON.stringify({
+
+                                roomName:
+                                    newName
+
+                            })
+
+                    }
+                );
+
+
+            if(
+                result.success
+            ){
+
+                roomName.textContent =
+                    result.roomName;
+
+                roomModal.classList.remove(
+                    "active"
+                );
+
+            }
+
+        }
+        catch(error){
+
+            showServerError(
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   USER NAME + وضعیت
+===================================================== */
+
+userButton.addEventListener(
+    "click",
+    function(){
+
+        userNameInput.value =
+            currentUserName;
+
+        /* # هر بار که مودال باز می‌شود، انتخاب موقت وضعیت
+           برابر با وضعیت فعلاً ذخیره‌شده‌ی کاربر مقداردهی می‌شود */
+        pendingUserStatus =
+            currentUserStatus;
+
+        buildStatusPicker();
+
+        userModal.classList.add(
+            "active"
+        );
+
+        userNameInput.focus();
+
+    }
+);
+
+
+closeUserModal.addEventListener(
+    "click",
+    function(){
+
+        userModal.classList.remove(
+            "active"
+        );
+
+    }
+);
+
+
+saveUserName.addEventListener(
+    "click",
+    async function(){
+
+        const newName =
+            userNameInput.value.trim();
+
+
+        if(
+            newName.length < 2
+        ){
+
+            alert(
+                "نام باید حداقل ۲ حرف باشد."
+            );
+
+            return;
+
+        }
+
+
+        currentUserName =
+            newName;
+
+
+        localStorage.setItem(
+            "chat_user_name",
+            currentUserName
+        );
+
+
+        /* # ذخیره‌ی نهایی وضعیت انتخاب‌شده در مودال */
+
+        currentUserStatus =
+            pendingUserStatus;
+
+        localStorage.setItem(
+            "chat_user_status",
+            currentUserStatus
+        );
+
+
+        await registerOnline();
+
+
+        userModal.classList.remove(
+            "active"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   TEXTAREA
+===================================================== */
+
+messageInput.addEventListener(
+    "input",
+    resizeTextarea
+);
+
+
+function resizeTextarea(){
+
+    messageInput.style.height =
+        "auto";
+
+
+    messageInput.style.height =
+        Math.min(
+            messageInput.scrollHeight,
+            130
+        )
+        +
+        "px";
+
+}
+
+
+/* =====================================================
+   SCROLL
+===================================================== */
+
+function scrollMessages(
+    smooth = true
+){
+
+    setTimeout(
+        function(){
+
+            messages.scrollTo({
+
+                top:
+                    messages.scrollHeight,
+
+                behavior:
+                    smooth
+                    ?
+                    "smooth"
+                    :
+                    "auto"
+
+            });
+
+        },
+        20
+    );
+
+}
+
+
+/* =====================================================
+   TIME
+===================================================== */
+
+function formatMessageTime(
+    timestamp
+){
+
+    try{
+
+        return new Date(
+            timestamp
+        ).toLocaleTimeString(
+            "fa-IR",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        );
+
+    }
+    catch{
+
+        return "";
+
+    }
+
+}
+
+
+/* =====================================================
+   MESSAGE TYPE
+===================================================== */
+
+function getMessageType(
+    file
+){
+
+    if(
+        file.type.startsWith(
+            "image/"
+        )
+    ){
+
+        return "image";
+
+    }
+
+
+    if(
+        file.type.startsWith(
+            "video/"
+        )
+    ){
+
+        return "video";
+
+    }
+
+
+    if(
+        file.type.startsWith(
+            "audio/"
+        )
+    ){
+
+        return "audio";
+
+    }
+
+
+    return "file";
+
+}
+
+
+/* =====================================================
+   FILE TYPE
+===================================================== */
+
+function getFileType(
+    file
+){
+
+    if(
+        file.type.startsWith(
+            "image/"
+        )
+    ){
+
+        return "تصویر";
+
+    }
+
+
+    if(
+        file.type.startsWith(
+            "video/"
+        )
+    ){
+
+        return "ویدیو";
+
+    }
+
+
+    if(
+        file.type.startsWith(
+            "audio/"
+        )
+    ){
+
+        return "فایل صوتی";
+
+    }
+
+
+    return "فایل";
+
+}
+
+
+/* =====================================================
+   FILE SIZE
+===================================================== */
+
+function formatFileSize(
+    bytes
+){
+
+    if(bytes < 1024){
+
+        return bytes + " B";
+
+    }
+
+
+    if(
+        bytes <
+        1024 * 1024
+    ){
+
+        return (
+            bytes / 1024
+        ).toFixed(1)
+        +
+        " KB";
+
+    }
+
+
+    if(
+        bytes <
+        1024 * 1024 * 1024
+    ){
+
+        return (
+            bytes /
+            (1024 * 1024)
+        ).toFixed(2)
+        +
+        " MB";
+
+    }
+
+
+    return (
+        bytes /
+        (1024 * 1024 * 1024)
+    ).toFixed(2)
+    +
+    " GB";
+
+}
+
+
+/* =====================================================
+   DOWNLOAD
+===================================================== */
+
+function downloadFile(
+    url,
+    filename
+){
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        filename;
+
+
+    document.body.appendChild(
+        a
+    );
+
+
+    a.click();
+
+
+    a.remove();
+
+}
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+            e.key !== "Escape"
+        ){
+
+            return;
+
+        }
+
+
+        closeMediaViewer();
+
+        roomModal.classList.remove(
+            "active"
+        );
+
+        userModal.classList.remove(
+            "active"
+        );
+
+        closeAllMessageMenus();
+
+        closeSpecialEmojiPanel();
+
+        closeFramePanel();
+
+        cancelReplyMode();
+
+    }
+);
+
+
+/* =====================================================
+   MODAL ENTER
+===================================================== */
+
+roomNameInput.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+            e.key === "Enter"
+        ){
+
+            saveRoomName.click();
+
+        }
+
+    }
+);
+
+
+userNameInput.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+            e.key === "Enter"
+        ){
+
+            saveUserName.click();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   PAGE HIDE
+===================================================== */
+
+window.addEventListener(
+    "beforeunload",
+    function(){
+
+        if(pollTimer){
+
+            clearInterval(
+                pollTimer
+            );
+
+        }
+
+        if(onlineTimer){
+
+            clearInterval(
+                onlineTimer
+            );
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   # مقداردهی اولیه پنل‌های ایموجی خاص و فریم، بلافاصله
+   بعد از بارگذاری اسکریپت (نیازی به منتظر ماندن برای
+   ورود به چت نیست چون این پنل‌ها فقط ساختار HTML می‌سازند)
+===================================================== */
+
+buildSpecialEmojiPanel();
+
+buildFramePanel();
+
+</script>
+
+</body>
+</html>
